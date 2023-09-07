@@ -1,6 +1,17 @@
 import { app, BrowserWindow, shell, ipcMain } from 'electron'
 import { release } from 'node:os'
 import { join } from 'node:path'
+import path from 'path'
+import fs from 'fs'
+import clone from 'git-clone/promise'
+import shelljs from 'shelljs'
+import { execSync } from 'child_process'
+
+const gitClone = {
+	callback: require('git-clone'),
+	promise: require('git-clone/promise')
+};
+
 
 // The built directory structure
 //
@@ -44,6 +55,13 @@ async function createWindow() {
   win = new BrowserWindow({
     title: 'Main window',
     icon: join(process.env.VITE_PUBLIC, 'favicon.ico'),
+    width: 1280,
+    height: 720,
+    minWidth: 850,
+    minHeight: 600,
+    frame: false,
+    fullscreenable: true,
+    resizable: true,
     webPreferences: {
       preload,
       // Warning: Enable nodeIntegration and disable contextIsolation is not secure in production
@@ -57,7 +75,7 @@ async function createWindow() {
   if (process.env.VITE_DEV_SERVER_URL) { // electron-vite-vue#298
     win.loadURL(url)
     // Open devTool if the app is not packaged
-    win.webContents.openDevTools()
+    // win.webContents.openDevTools()
   } else {
     win.loadFile(indexHtml)
   }
@@ -114,4 +132,133 @@ ipcMain.handle('open-win', (_, arg) => {
   } else {
     childWindow.loadFile(indexHtml, { hash: arg })
   }
+})
+
+ipcMain.on('close-app', (_) => {
+  app.quit()
+})
+
+ipcMain.handle('fullscreen-app', (_) => {
+  if (win?.isFullScreen()) {
+    win.setFullScreen(false)
+  } else {
+    win?.setFullScreen(true)
+  }
+  return win?.isFullScreen()
+})
+
+ipcMain.on('minimize-app', (_) => {
+  win?.minimize()
+})
+
+ipcMain.handle('get-websites', (_) => {
+  console.log('get websites')
+  //Get all folders in the dist folder
+  const websites = fs.readdirSync(process.env.DIST, {withFileTypes: true})
+  .filter(dirent => dirent.isDirectory())
+  .map(dirent => dirent.name)
+  return websites
+})
+
+
+
+ipcMain.handle('create-website', async (_, website) => {
+  //Create a folder with the website name
+  const websitePath = path.join('./dist/'+website.name)
+  //Wait for the end of runTestCase for return websiteData
+  try {
+    const websiteData = JSON.stringify(website)
+    await runTestCase('promise', null, website.name, promiseTest, () => {
+      fs.mkdirSync(websitePath, {recursive: true})
+      // //Create a json file with the website data
+      fs.writeFileSync(path.join(websitePath, 'config.json'), websiteData)
+    })
+    return websiteData
+  } catch (err) {
+    console.log(err)
+    return null
+  }
+
+  
+  
+})
+
+function assertGitRepoSync(dir, revision) {
+	const stats = fs.statSync(`${dir}/.git`);
+	return stats.isDirectory();
+}
+
+function assertCheckout(dir, expectedCheckout) {
+	const checkedOut = execSync('git rev-parse HEAD', {cwd: dir, encoding: 'utf8'}).trim();
+	return checkedOut === expectedCheckout;
+}
+
+let nextCheckoutId = 1;
+async function runTestCase(name, opts, websiteName, fn, _callback) {
+	const id = nextCheckoutId++;
+	const targetDir = `./dist/${websiteName}`;
+
+  await fn(targetDir, opts, (err) => {
+    if (err) {
+      console.error(`Test '${name}' for ${websiteName} failed: ${err.message}`);
+      throw err;
+    } else if (!assertGitRepoSync(targetDir)) {
+      console.error(`Test '${name}' for ${websiteName} failed: target directory is not a git repository`);
+      throw err;
+    } else if (opts && opts.checkout && !assertCheckout(targetDir, opts.checkout)) {
+      console.error(`Test '${name}' for ${websiteName} failed: incorrect checkout`);
+      throw err;
+    } else {
+      console.error(`Test '${name}' for ${websiteName}: OK`);
+    }
+    // execSync(`rm -rf ${targetDir}`);
+    _callback()
+  });
+}
+
+const promiseTest = async (targetDir, options, onComplete) => {
+	try {
+    // await gitClone.promise('git@github.com:Dehairka/vue-boilerplate.git', targetDir, options);
+    await gitClone.callback('git@github.com:Dehairka/vue-boilerplate.git', targetDir, {
+      options,
+      progress: (evt) => {
+        console.log(evt);
+      }
+    }, () => {
+      console.log("done!");
+      onComplete(null);
+    });
+	} catch (err) {
+		onComplete(err);
+	}
+}
+
+const callbackTest = (targetDir, options, onComplete) => {
+	if (options === null) {
+    // gitClone.callback('git@github.com:jaz303/git-clone.git', targetDir, onComplete);
+    gitClone.callback('git@github.com:Dehairka/vue-boilerplate.git', targetDir, {
+      progress: (evt) => {
+        console.log(evt);
+      }
+    }, () => {
+      console.log("done!");
+      ipcMain.emit('website-created')
+    });
+	} else {
+		gitClone.callback('git@github.com:Dehairka/vue-boilerplate.git', targetDir, {
+      options,
+      progress: (evt) => {
+        console.log(evt);
+      }
+    }, () => {
+      console.log("done!");
+    });
+	}
+};
+
+ipcMain.handle('choose-website', (_, websiteName) => {
+  //Get the config.json file from the website folder
+  const websitePath = path.join(process.env.DIST, websiteName)
+  const websiteData = fs.readFileSync(path.join(websitePath, 'config.json'), 'utf8')
+  return websiteData
 })
