@@ -168,7 +168,7 @@ ipcMain.handle('create-website', async (_, website) => {
   //Wait for the end of runTestCase for return websiteData
   try {
     const websiteData = JSON.stringify(website)
-    await runTestCase('promise', null, website.name, promiseTest, () => {
+    await runTestCase('promise', { args: ['--progress', '--verbose'] }, website.name, promiseTest, () => {
       fs.mkdirSync(websitePath, {recursive: true})
       // //Create a json file with the website data
       fs.writeFileSync(path.join(websitePath, 'config.json'), websiteData)

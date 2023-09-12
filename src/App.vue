@@ -32,15 +32,21 @@
         </li>
         <li
           class="w-full  py-2 px-4 cursor-pointer transition hover:bg-slate-500 hover:text-slate-300 font-semibold flex items-center"
-          @click="goToPage('/')">
+          @click="goToPage('/appareance')">
           <PaintBrushIcon class="w-6 h-6 mr-4" />
-          <router-link to="/" class="">Appareance</router-link>
+          <router-link to="/appareance" class="">Appareance</router-link>
         </li>
         <li
           class="w-full  py-2 px-4 cursor-pointer transition hover:bg-slate-500 hover:text-slate-300 font-semibold flex items-center"
           @click="goToPage('/')">
           <CircleStackIcon class="w-6 h-6 mr-4" />
           <router-link to="/" class="">Plugins</router-link>
+        </li>
+        <li
+          class="w-full  py-2 px-4 cursor-pointer transition hover:bg-slate-500 hover:text-slate-300 font-semibold flex items-center"
+          @click="goToPage('/view')">
+          <CircleStackIcon class="w-6 h-6 mr-4" />
+          <router-link to="/view" class="">View your website</router-link>
         </li>
         <li
           class="w-full  py-2 px-4 cursor-pointer transition hover:bg-slate-500 hover:text-slate-300 font-semibold flex items-center"
@@ -59,6 +65,10 @@
         <h2 class="text-slate-300 font-semibold uppercase">{{ $route.name }}</h2>
       </div>
       <div class="flex items-center no-drag">
+        <button class="btn flex items-center mr-4 group" @click="startWebsite()">
+          <PlayIcon class="w-6 h-6 text-slate-300 mr-4 transition group-hover:text-slate-800" />
+          Start your website
+        </button>
         <button @click="minimizeApp()">
           <MinusIcon class="w-6 h-6 text-slate-300 mr-4" />
         </button>
@@ -78,7 +88,7 @@
 </template>
 
 <script>
-import { ClipboardDocumentListIcon, WrenchScrewdriverIcon, CameraIcon, DocumentDuplicateIcon, HomeIcon, ChevronLeftIcon, XMarkIcon, ArrowsPointingOutIcon, MinusIcon, ArrowsPointingInIcon, CircleStackIcon, AdjustmentsHorizontalIcon, PaintBrushIcon } from '@heroicons/vue/24/solid'
+import { PlayIcon, ClipboardDocumentListIcon, WrenchScrewdriverIcon, CameraIcon, DocumentDuplicateIcon, HomeIcon, ChevronLeftIcon, XMarkIcon, ArrowsPointingOutIcon, MinusIcon, ArrowsPointingInIcon, CircleStackIcon, AdjustmentsHorizontalIcon, PaintBrushIcon } from '@heroicons/vue/24/solid'
 import { ipcRenderer } from 'electron'
 import { useWebsiteStore } from './stores/WebsiteStore'
 
@@ -96,7 +106,8 @@ export default {
     DocumentDuplicateIcon,
     CameraIcon,
     WrenchScrewdriverIcon,
-    ClipboardDocumentListIcon
+    ClipboardDocumentListIcon,
+    PlayIcon
   },
   data() {
     return {
@@ -133,4 +144,5 @@ export default {
 
 .no-drag {
   -webkit-app-region: no-drag
-}</style>
+}
+</style>

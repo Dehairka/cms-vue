@@ -28,7 +28,13 @@ export default {
             }
             store.setWebsite(website)
             const websiteCreated = await ipcRenderer.invoke('create-website', website)
-            console.log("🚀 ~ websiteCreated:", websiteCreated)
+            // console.log("🚀 ~ websiteCreated:", websiteCreated)
+            if (websiteCreated) {
+                this.$router.push('/dashboard')
+                // console.log('on push', websiteCreated)
+            } else {
+                console.log('error')
+            }
             // this.$router.push('/dashboard')
         }
     }
