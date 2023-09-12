@@ -1,6 +1,6 @@
 <template>
-  <div class="bg-slate-300 drag text-slate-800 grid grid-cols-5 grid-rows-5 gap-0">
-    <nav class="bg-slate-400 h-screen row-span-5" v-if="website">
+  <div class="bg-slate-300 drag text-slate-800 grid grid-cols-5 gap-0">
+    <nav class="sticky top-0 bg-slate-400 h-screen row-span-2" v-if="website">
       <div class="flex items-center p-4 no-drag cursor-pointer" @click="goToPage('/')">
         <img class="w-8 mr-4" src="./assets/logo.svg" alt="logo icon">
         <h1 class="text-2xl uppercase font-black">CMS VUE</h1>
@@ -56,7 +56,7 @@
         </li>
       </ul>
     </nav>
-    <header class="bg-slate-500 max-h-16 drag flex items-center justify-between p-4 col-span-4"
+    <header class="sticky top-0 bg-slate-500 max-h-16 drag flex items-center justify-between p-4 col-span-4"
       :class="website ? 'col-span-4' : 'col-span-5'">
       <div class="flex items-center">
         <button class="mr-4">
@@ -81,7 +81,7 @@
         </button>
       </div>
     </header>
-    <div class="row-span-5 row-start-2 no-drag bg-red-600" :class="website ? 'col-span-4 col-start-2' : 'col-span-5'">
+    <div class="no-drag bg-red-600 h-screen" :class="website ? 'col-span-4 col-start-2' : 'col-span-5'">
       <router-view />
     </div>
   </div>
