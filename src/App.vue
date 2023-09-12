@@ -1,6 +1,6 @@
 <template>
-  <div class=" h-screen w-full bg-slate-300 drag text-slate-800 grid grid-cols-5 grid-rows-12 gap-0">
-    <nav class="bg-slate-400 h-full row-span-5" v-if="website">
+  <div class="bg-slate-300 drag text-slate-800 grid grid-cols-5 grid-rows-5 gap-0">
+    <nav class="bg-slate-400 h-screen row-span-5" v-if="website">
       <div class="flex items-center p-4 no-drag cursor-pointer" @click="goToPage('/')">
         <img class="w-8 mr-4" src="./assets/logo.svg" alt="logo icon">
         <h1 class="text-2xl uppercase font-black">CMS VUE</h1>
@@ -56,16 +56,16 @@
         </li>
       </ul>
     </nav>
-    <header class="bg-slate-500 max-h-16 drag flex items-center justify-between p-4"
+    <header class="bg-slate-500 max-h-16 drag flex items-center justify-between p-4 col-span-4"
       :class="website ? 'col-span-4' : 'col-span-5'">
       <div class="flex items-center">
         <button class="mr-4">
-          <ChevronLeftIcon class="w-6 h-6 text-slate-300" />
+          <ChevronLeftIcon class="w-6 h-6 text-slate-300 no-drag" @click="goToPage('/')" />
         </button>
         <h2 class="text-slate-300 font-semibold uppercase">{{ $route.name }}</h2>
       </div>
       <div class="flex items-center no-drag">
-        <button class="btn flex items-center mr-4 group" @click="startWebsite()">
+        <button v-if="website" class="btn flex items-center mr-4 group" @click="goToPage('/start')">
           <PlayIcon class="w-6 h-6 text-slate-300 mr-4 transition group-hover:text-slate-800" />
           Start your website
         </button>
@@ -81,7 +81,7 @@
         </button>
       </div>
     </header>
-    <div class="row-span-4 row-start-2 no-drag" :class="website ? 'col-span-4 col-start-2' : 'col-span-5'">
+    <div class="row-span-5 row-start-2 no-drag bg-red-600" :class="website ? 'col-span-4 col-start-2' : 'col-span-5'">
       <router-view />
     </div>
   </div>

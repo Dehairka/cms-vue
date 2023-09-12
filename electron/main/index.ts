@@ -6,6 +6,9 @@ import fs from 'fs'
 import clone from 'git-clone/promise'
 import shelljs from 'shelljs'
 import { execSync } from 'child_process'
+const electron = require('electron');
+const child_process = require('child_process');
+const dialog = electron.dialog;
 
 const gitClone = {
 	callback: require('git-clone'),
@@ -219,7 +222,7 @@ async function runTestCase(name, opts, websiteName, fn, _callback) {
 const promiseTest = async (targetDir, options, onComplete) => {
 	try {
     // await gitClone.promise('git@github.com:Dehairka/vue-boilerplate.git', targetDir, options);
-    await gitClone.callback('git@github.com:Dehairka/vue-boilerplate.git', targetDir, {
+    await gitClone.callback('git@github.com:Dehairka/Vuexy.git', targetDir, {
       options,
       progress: (evt) => {
         console.log(evt);
@@ -262,3 +265,80 @@ ipcMain.handle('choose-website', (_, websiteName) => {
   const websiteData = fs.readFileSync(path.join(websitePath, 'config.json'), 'utf8')
   return websiteData
 })
+
+ipcMain.handle('start-website', async (_, website: Object) => {
+  //Run npm install and npm run dev in the website folder
+  const websiteJSON = JSON.parse(website.toString())
+  const websitePath = path.join(process.env.DIST, websiteJSON.name)
+  let logs = null;
+    var child = await child_process.exec('yarn install', { cwd: websitePath }, async (error, stdout, stderr) => {
+      if (error) {
+        console.error(`exec error: ${error}`);
+        return;
+      }
+      console.log(`stdout: ${stdout}`);
+      logs = logs + stdout;
+      win?.webContents.send('website-logs', stdout);
+      console.error(`stderr: ${stderr}`);
+      await child_process.exec('yarn dev', { cwd: websitePath }, (error, stdoutt, stderrr) => {
+        if (error) {
+          console.error(`exec error: ${error}`);
+          return;
+        }
+        console.log(`stdout: ${stderrr}`);
+        logs = logs + stdout;
+        //Emits logs to the renderer process
+        win?.webContents.send('website-logs', stdoutt);
+
+        console.error(`stderr: ${stderr}`);
+      });
+    });
+  // shelljs.exec('npm run dev')
+  return true
+})
+
+function run_script(command, args, callback) {
+    var child = child_process.spawn(command, args, {
+        encoding: 'utf8',
+        shell: true
+    });
+    // You can also use a variable to save the output for when the script closes later
+    child.on('error', (error) => {
+        dialog.showMessageBox({
+            title: 'Title',
+            type: 'warning',
+            message: 'Error occured.\r\n' + error
+        });
+    });
+
+    child.stdout.setEncoding('utf8');
+    child.stdout.on('data', (data) => {
+        //Here is the output
+        data=data.toString();   
+        console.log(data);      
+    });
+
+    child.stderr.setEncoding('utf8');
+    child.stderr.on('data', (data) => {
+        // Return some data to the renderer process with the mainprocess-response ID
+        win.webContents.send('mainprocess-response', data);
+        //Here is the output from the command
+        console.log(data);  
+    });
+
+    // child.on('close', (code) => {
+    //     //Here you can get the exit code of the script  
+    //     switch (code) {
+    //         case 0:
+    //             dialog.showMessageBox({
+    //                 title: 'Title',
+    //                 type: 'info',
+    //                 message: 'End process.\r\n'
+    //             });
+    //             break;
+    //     }
+
+    // });
+    if (typeof callback === 'function')
+        callback();
+}
